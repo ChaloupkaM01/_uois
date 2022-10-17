@@ -27,6 +27,7 @@ const getENV = (name, defaultValue) => {
       subgraphs: [
         { name: "usersAndGroups", url: "http://gql_ug:8000/gql" },
         { name: "events", url: "http://gql_events:8000/gql" },
+        { name: "projects", url: "http://gql_projects:8000/gql" },
           // List of federation-capable GraphQL endpoints...
       ],
     }),
