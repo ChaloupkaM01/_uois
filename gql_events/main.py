@@ -4,6 +4,9 @@ from urllib.request import Request
 import typing
 import strawberry as strawberryB
 
+def randomProject(id = 1):
+    return {'id': id, 'name': f'Proejct({id})', 'typ': 'IT', 'manager': 'Josef', 'workingGroup': 'ITstuff', 'budget': '100k'}
+
 def randomEvent(id = 1):
     return {'id': id, 'name': f'Event({id})'}
 
@@ -13,6 +16,33 @@ def randomUser(id = 1):
 def resolveDictField(self, info: strawberryB.types.Info) -> str:
     return self[info.field_name]
 
+@strawberryB.federation.type(keys=["id"])
+class ProjectGQLModel:
+
+    @strawberryB.field
+    def id(self) -> str:
+        return self['id']
+
+    @strawberryB.field
+    def name(self) -> str:
+        return self['name']
+
+    @strawberryB.field
+    def typ(self) -> str:
+        return self['typ']
+
+    @strawberryB.field
+    def manager(self) -> str:
+        return self['manager']
+        
+    @strawberryB.field
+    def workingGroup(self) -> str:
+        return self['workingGroup']
+
+    @strawberryB.field
+    def budget(self) -> str:
+        return self['budget']
+        
 @strawberryB.federation.type(extend=True, keys=["id"])
 class UserGQLModel:
 
@@ -51,7 +81,9 @@ class Query:
     def event_by_id(self, id: str) -> 'EventGQLModel':
         return randomEvent(id)
 
-
+    @strawberryB.field
+    def project_by_id(self, id: str) -> 'ProjectGQLModel':
+        return randomProject(id)
 
 from fastapi import FastAPI
 from strawberry.fastapi import GraphQLRouter
@@ -60,7 +92,7 @@ def myContext():
     return {'session': None}
 
 graphql_app = GraphQLRouter(
-    strawberryB.federation.Schema(query=Query, types=[UserGQLModel, EventGQLModel]), 
+    strawberryB.federation.Schema(query=Query, types=[UserGQLModel, EventGQLModel, ProjectGQLModel]), 
     graphiql = True,
     allow_queries_via_get = True,
     root_value_getter = None,
@@ -76,5 +108,3 @@ print('All initialization is done')
 @app.get('api/ug_gql')
 def hello():
     return {'hello': 'world'}
-
-
