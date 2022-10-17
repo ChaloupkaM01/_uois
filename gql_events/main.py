@@ -5,7 +5,13 @@ import typing
 import strawberry as strawberryB
 
 def randomProject(id = 1):
-    return {'id': id, 'name': f'Proejct({id})', 'typ': 'IT', 'manager': 'Josef', 'workingGroup': 'ITstuff', 'budget': '100k'}
+    return {'id': id, 'name': f'Proejct({id})', 'typ': 'IT', 'manager': 'Josef', 'workingGroup': 'ITstuff', 'budget': 'id'}
+
+def randomFinance(id = 1):
+    return {'id': id, 'other': '200k', 'investment': '25k', 'personal': '10k'}
+
+def randomMilestone(id = 1):
+    return {'id': id, 'name': 'milestone', 'startDate': 'date', 'finishDate': 'date'}
 
 def randomEvent(id = 1):
     return {'id': id, 'name': f'Event({id})'}
@@ -42,7 +48,45 @@ class ProjectGQLModel:
     @strawberryB.field
     def budget(self) -> str:
         return self['budget']
+
+@strawberryB.federation.type(keys=["id"])
+class FinanceGQLModel:
+
+    @strawberryB.field
+    def id(self) -> str:
+        return self['id']
+
+    @strawberryB.field
+    def other(self) -> str:
+        return self['other']
+
+    @strawberryB.field
+    def investment(self) -> str:
+        return self['investment']
+
+    @strawberryB.field
+    def personal(self) -> str:
+        return self['personal']
         
+@strawberryB.federation.type(keys=["id"])
+class MilestoneGQLModel:
+
+    @strawberryB.field
+    def id(self) -> str:
+        return self['id']
+
+    @strawberryB.field
+    def name(self) -> str:
+        return self['name']
+
+    @strawberryB.field
+    def startDate(self) -> str:
+        return self['startDate']
+    
+    @strawberryB.field
+    def finishDate(self) -> str:
+        return self['finishDate']
+
 @strawberryB.federation.type(extend=True, keys=["id"])
 class UserGQLModel:
 
@@ -85,6 +129,14 @@ class Query:
     def project_by_id(self, id: str) -> 'ProjectGQLModel':
         return randomProject(id)
 
+    @strawberryB.field
+    def finance_by_id(self, id: str) -> 'FinanceGQLModel':
+        return randomFinance(id)
+
+    @strawberryB.field
+    def milestone_by_id(self, id: str) -> 'MilestoneGQLModel':
+        return randomMilestone(id)
+
 from fastapi import FastAPI
 from strawberry.fastapi import GraphQLRouter
 
@@ -92,7 +144,7 @@ def myContext():
     return {'session': None}
 
 graphql_app = GraphQLRouter(
-    strawberryB.federation.Schema(query=Query, types=[UserGQLModel, EventGQLModel, ProjectGQLModel]), 
+    strawberryB.federation.Schema(query=Query, types=[UserGQLModel, EventGQLModel, ProjectGQLModel, FinanceGQLModel, MilestoneGQLModel]), 
     graphiql = True,
     allow_queries_via_get = True,
     root_value_getter = None,
