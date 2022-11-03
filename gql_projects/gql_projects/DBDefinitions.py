@@ -22,6 +22,13 @@ def UUIDColumn(name=None):
 # zde definujte sve SQLAlchemy modely
 # je-li treba, muzete definovat modely obsahujici jen id polozku, na ktere se budete odkazovat
 #
+
+"""  class ProjectModel(BaseModel):
+    __tablename__ = 'projects'
+
+    id = UUIDColumn()  """
+    
+
 ###########################################################################################################################
 
 

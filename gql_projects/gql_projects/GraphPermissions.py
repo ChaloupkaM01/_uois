@@ -3,6 +3,7 @@ import strawberry
 
 from gql_ug.DBDefinitions import BaseModel, UserModel, GroupModel, MembershipModel, RoleModel
 from gql_ug.DBDefinitions import GroupTypeModel, RoleTypeModel
+#přepsat ug na naše
 
 def AsyncSessionFromInfo(info):
     return info.context['session']

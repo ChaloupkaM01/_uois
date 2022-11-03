@@ -10,6 +10,7 @@ from uoishelpers.resolvers import create1NGetter, createEntityByIdGetter, create
 from uoishelpers.resolvers import putSingleEntityToDb
 
 from gql_empty.DBDefinitions import BaseModel
+#přepsat na naše
 
 ## Nasleduji funkce, ktere lze pouzit jako asynchronni resolvery
 

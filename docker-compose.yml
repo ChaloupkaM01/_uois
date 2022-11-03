@@ -44,10 +44,10 @@ services:
     ports:
       - 31123:8000
 
-  gql_empty:
-    image: gql_empty
+  gql_projects:
+    image: gql_projects
     build:
-      context: ./gql_empty
+      context: ./gql_projects
     environment: 
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=example
