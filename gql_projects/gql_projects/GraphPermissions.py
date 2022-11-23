@@ -1,9 +1,8 @@
 from sqlalchemy.future import select
 import strawberry
 
-from gql_ug.DBDefinitions import BaseModel, UserModel, GroupModel, MembershipModel, RoleModel
-from gql_ug.DBDefinitions import GroupTypeModel, RoleTypeModel
-#přepsat ug na naše
+from gql_projects.DBDefinitions import BaseModel, UserModel, GroupModel, MembershipModel, RoleModel
+from gql_projects.DBDefinitions import GroupTypeModel, RoleTypeModel
 
 def AsyncSessionFromInfo(info):
     return info.context['session']

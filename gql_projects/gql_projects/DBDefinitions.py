@@ -1,7 +1,7 @@
 import sqlalchemy
 import datetime
 
-from sqlalchemy import Column, String, BigInteger, Integer, DateTime, ForeignKey, Sequence, Table, Boolean
+from sqlalchemy import Column, String, BigInteger, Integer, DateTime, ForeignKey, Sequence, Table, Boolean, Float
 from sqlalchemy.dialects.postgresql import UUID
 
 from sqlalchemy.orm import relationship
@@ -22,18 +22,69 @@ def UUIDColumn(name=None):
 # zde definujte sve SQLAlchemy modely
 # je-li treba, muzete definovat modely obsahujici jen id polozku, na ktere se budete odkazovat
 #
-
-"""  class ProjectModel(BaseModel):
-    __tablename__ = 'projects'
-
-    id = UUIDColumn()  """
     
+class ProjectModel(BaseModel):
+    __tablename__ = 'projects'
+    
+    id = UUIDColumn()
+    
+    name = Column(String)
+    startdate = Column(DateTime)
+    enddate = Column(DateTime)
+    
+    projectType_id = Column(ForeignKey('projectTypes.id'), primary_key=True)                      
+    projectType = relationship('ProjectTypeModel', back_populates='projects')                           
+    
+    group_id = Column(ForeignKey('groups.id'), primary_key=True)
+    group = relationship('groupModel')
 
+    finance_id = Column(ForeignKey('finances.id'), primary_key=True)   
+    
+class ProjectTypeModel(BaseModel):
+    __tablename__ = 'projectTypes'
+    
+    id = UUIDColumn()
+    name = Column(String)
+                            
+    projects = relationship('ProjectModel', back_populates='projectType')                     
+    
+class FinanceModel(BaseModel):
+    __tablename__ = 'finances'
+    
+    id = UUIDColumn()
+    name = Column(String)
+    amount = Column(Float)
+        
+    project_id = Column(ForeignKey('projects.id'), primary_key=True)              
+                            
+    financeType_id = Column(ForeignKey('financeTypes.id'), primary_key=True)
+    financeType = relationship('FinanceTypeModel', back_populates='finances')
+                               
+class FinanceTypeModel(BaseModel):
+    __tablename__ = 'financeTypes'
+    
+    id = UUIDColumn()
+    name = Column(String)
+   
+    finances = relationship('FinanceModel', back_populates='financeType')
+      
+class MilestoneModel(BaseModel):
+    __tablename__ = 'milestones'
+    
+    id = UUIDColumn()
+    name = Column(String)                          
+    startdate = Column(DateTime)
+    enddate = Column(DateTime)
+    
+    project_id = Column(ForeignKey('projects.id'), primary_key=True)
+    
+class GroupModel(BaseModel):
+    """Spravuje data spojena se skupinou
+    """
+    __tablename__ = 'groups'
+    
+    id = UUIDColumn()
 ###########################################################################################################################
-
-
-
-
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
