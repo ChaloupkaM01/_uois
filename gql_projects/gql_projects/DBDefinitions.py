@@ -49,7 +49,7 @@ class ProjectTypeModel(BaseModel):
     projects = relationship('ProjectModel', back_populates='projectType')                     
     
 class FinanceModel(BaseModel):
-    __tablename__ = 'finances'
+    __tablename__ = 'projectFinances'
     
     id = UUIDColumn()
     name = Column(String)
@@ -61,7 +61,7 @@ class FinanceModel(BaseModel):
     financeType = relationship('FinanceTypeModel', back_populates='finances')
                                
 class FinanceTypeModel(BaseModel):
-    __tablename__ = 'financeTypes'
+    __tablename__ = 'projectFinanceTypes'
     
     id = UUIDColumn()
     name = Column(String)
@@ -69,7 +69,7 @@ class FinanceTypeModel(BaseModel):
     finances = relationship('FinanceModel', back_populates='financeType')
       
 class MilestoneModel(BaseModel):
-    __tablename__ = 'milestones'
+    __tablename__ = 'projectMilestones'
     
     id = UUIDColumn()
     name = Column(String)                          

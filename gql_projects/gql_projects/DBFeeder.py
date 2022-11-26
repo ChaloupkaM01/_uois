@@ -1,9 +1,9 @@
-from doctest import master
-from functools import cache
 from gql_projects.DBDefinitions import BaseModel, ProjectModel, ProjectTypeModel, FinanceModel, FinanceTypeModel, MilestoneModel, GroupModel
 
+import uuid
 import random
 import itertools
+
 from functools import cache
 
 
@@ -45,8 +45,10 @@ def determineFinanceTypes():
     return financeTypes
 
 def randomProject(name):
+    """Náhodný projekt"""
     result = {
-        'name': {name},
+        'id': f'{uuid.uuid1()}',
+        'name': f'{name}',
         #'startDate': randomDate()
         #'endDate': randomDate()
         'milestones' : [
@@ -55,18 +57,20 @@ def randomProject(name):
     }
     return result
 
-    def randomMilestone(index):
-        result = {
-            'name': f'Milestone {index}'
-            #'startDate': randomDate(),
-            #'endDAte' :  randomDate(),
+def randomMilestone(index):
+    """Náhodný milestone"""
+    result = {
+        'name': f'Milestone {index}'
+        #'startDate': randomDate(),
+        #'endDAte' :  randomDate(),
 
-        }
-        return result
+    }
+    return result
     
-    def randomFinance():
-        result = {
-            'name':'',
-            'amount': random.randint(100, 20000),
-        }
-        return result
+def randomFinance():
+    """Náhodné finance"""
+    result = {
+        'name':'',
+        'amount': random.randint(100, 20000),
+    }
+    return result
