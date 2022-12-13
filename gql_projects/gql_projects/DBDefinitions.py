@@ -26,8 +26,7 @@ def UUIDColumn(name=None):
 class ProjectModel(BaseModel):
     __tablename__ = 'projects'
     
-    id = UUIDColumn()
-    
+    id = Column(String)
     name = Column(String)
     startdate = Column(DateTime)
     enddate = Column(DateTime)
@@ -35,15 +34,16 @@ class ProjectModel(BaseModel):
     projectType_id = Column(ForeignKey('projectTypes.id'), primary_key=True)                      
     projectType = relationship('ProjectTypeModel', back_populates='projects')                           
     
+    finance_id = Column(ForeignKey('finances.id'), primary_key=True)   
+    milestone_id = Column(ForeignKey('milestones.id'), primary_key=True)
+
     group_id = Column(ForeignKey('groups.id'), primary_key=True)
     group = relationship('groupModel')
-
-    finance_id = Column(ForeignKey('finances.id'), primary_key=True)   
     
 class ProjectTypeModel(BaseModel):
     __tablename__ = 'projectTypes'
     
-    id = UUIDColumn()
+    id = Column(String)
     name = Column(String)
                             
     projects = relationship('ProjectModel', back_populates='projectType')                     
@@ -51,7 +51,7 @@ class ProjectTypeModel(BaseModel):
 class FinanceModel(BaseModel):
     __tablename__ = 'projectFinances'
     
-    id = UUIDColumn()
+    id = Column(String)
     name = Column(String)
     amount = Column(Float)
         
@@ -63,7 +63,7 @@ class FinanceModel(BaseModel):
 class FinanceTypeModel(BaseModel):
     __tablename__ = 'projectFinanceTypes'
     
-    id = UUIDColumn()
+    id = Column(String)
     name = Column(String)
    
     finances = relationship('FinanceModel', back_populates='financeType')
@@ -71,7 +71,7 @@ class FinanceTypeModel(BaseModel):
 class MilestoneModel(BaseModel):
     __tablename__ = 'projectMilestones'
     
-    id = UUIDColumn()
+    id = Column(String)
     name = Column(String)                          
     startdate = Column(DateTime)
     enddate = Column(DateTime)
@@ -83,7 +83,7 @@ class GroupModel(BaseModel):
     """
     __tablename__ = 'groups'
     
-    id = UUIDColumn()
+    id = Column(String)
 ###########################################################################################################################
 
 from sqlalchemy import create_engine

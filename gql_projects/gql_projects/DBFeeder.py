@@ -29,48 +29,73 @@ def singleCall(asyncFunc):
 def determineProjectTypes():
     """Definuje zakladni typy roli"""
     projectTypes = [ 
-        {'name':'shortTerm'},
-        {'name':'mediumTerm'},
-        {'name':'longTerm'},
+        {'id': f'{uuid.uuid1()}', 'name':'shortTerm'},
+        {'id': f'{uuid.uuid1()}', 'name':'mediumTerm'},
+        {'id': f'{uuid.uuid1()}', 'name':'longTerm'},
     ]
     return projectTypes
 
 def determineFinanceTypes():
     """Definuje zakladni typy financi"""
     financeTypes = [ 
-        {'name':'travel_expenses'},
-        {'name':'accomodation_expenses'},
-        {'name':'other_expenses'},
+        {'id': f'{uuid.uuid1()}', 'name':'travel_expenses'},
+        {'id': f'{uuid.uuid1()}', 'name':'accomodation_expenses'},
+        {'id': f'{uuid.uuid1()}', 'name':'other_expenses'},
     ]
     return financeTypes
 
 def randomProject(name):
     """Náhodný projekt"""
+    randomGroupResult = randomGroup()
+
     result = {
         'id': f'{uuid.uuid1()}',
         'name': f'{name}',
         #'startDate': randomDate()
         #'endDate': randomDate()
+        'projectType_id': "",
+        'finances' : [
+            #randomFinance(i+1) for i in range(random.randint(3, 5))
+        ],
+
         'milestones' : [
             #randomMilestone(i+1) for i in range(random.randint(3, 5))
         ],
+        'group_id': randomGroupResult['id']
+    }
+    return result
+
+def randomFinance(index):
+    """Náhodné finance"""
+    randomProjectResult = randomProject()
+
+    result = {
+        'id': f'{uuid.uuid1()}',
+        'name': f'Finance{index}',
+        'amount': random.randint(100, 20000),
+        'financeType_id': '',
+
+        'project_id': randomProjectResult['id'],
     }
     return result
 
 def randomMilestone(index):
     """Náhodný milestone"""
+    randomProjectResult = randomProject()
+
     result = {
-        'name': f'Milestone {index}'
+        'id': f'{uuid.uuid1()}',
+        'name': f'Milestone {index}',
         #'startDate': randomDate(),
         #'endDAte' :  randomDate(),
 
+        'project_id': randomProjectResult['id'],
     }
     return result
-    
-def randomFinance():
-    """Náhodné finance"""
+
+def randomGroup():
+    """Náhodná řešitelská skupina"""
     result = {
-        'name':'',
-        'amount': random.randint(100, 20000),
+        'id': f'{uuid.uuid1()}',
     }
     return result
