@@ -28,23 +28,21 @@ class ProjectModel(BaseModel):
     
     id = Column(String)
     name = Column(String)
-    startdate = Column(DateTime)
-    enddate = Column(DateTime)
-    
+    startDate = Column(DateTime)
+    endDate = Column(DateTime)
+    lastChange = Column(DateTime)
+
     projectType_id = Column(ForeignKey('projectTypes.id'), primary_key=True)                      
     projectType = relationship('ProjectTypeModel', back_populates='projects')                           
-    
-    finance_id = Column(ForeignKey('finances.id'), primary_key=True)   
-    milestone_id = Column(ForeignKey('milestones.id'), primary_key=True)
 
     group_id = Column(ForeignKey('groups.id'), primary_key=True)
     group = relationship('groupModel')
-    
+
 class ProjectTypeModel(BaseModel):
     __tablename__ = 'projectTypes'
     
     id = Column(String)
-    name = Column(String)
+    type = Column(String)
                             
     projects = relationship('ProjectModel', back_populates='projectType')                     
     
@@ -54,6 +52,7 @@ class FinanceModel(BaseModel):
     id = Column(String)
     name = Column(String)
     amount = Column(Float)
+    lastChange = Column(DateTime)
         
     project_id = Column(ForeignKey('projects.id'), primary_key=True)              
                             
@@ -64,7 +63,7 @@ class FinanceTypeModel(BaseModel):
     __tablename__ = 'projectFinanceTypes'
     
     id = Column(String)
-    name = Column(String)
+    type = Column(String)
    
     finances = relationship('FinanceModel', back_populates='financeType')
       
@@ -73,17 +72,18 @@ class MilestoneModel(BaseModel):
     
     id = Column(String)
     name = Column(String)                          
-    startdate = Column(DateTime)
-    enddate = Column(DateTime)
+    date = Column(DateTime)
+    lastChange = Column(DateTime)
     
     project_id = Column(ForeignKey('projects.id'), primary_key=True)
-    
+
 class GroupModel(BaseModel):
     """Spravuje data spojena se skupinou
     """
     __tablename__ = 'groups'
     
     id = Column(String)
+    
 ###########################################################################################################################
 
 from sqlalchemy import create_engine
