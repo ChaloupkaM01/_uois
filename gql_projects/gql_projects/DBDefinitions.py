@@ -26,63 +26,68 @@ def UUIDColumn(name=None):
 class ProjectModel(BaseModel):
     __tablename__ = 'projects'
     
-    id = Column(String)
+    id = UUIDColumn()
     name = Column(String)
     startDate = Column(DateTime)
     endDate = Column(DateTime)
-    lastChange = Column(DateTime)
+    lastchange = Column(DateTime, default=datetime.datetime.now)
 
-    projectType_id = Column(ForeignKey('projectTypes.id'), primary_key=True)                      
-    projectType = relationship('ProjectTypeModel', back_populates='projects')                           
+    projectType_id = Column(ForeignKey('projectProjectTypes.id'), primary_key=True)                      
+    projectType = relationship('ProjectTypeModel', back_populates='projects') 
+
+    finance = relationship('FinanceModel', back_populates='project') #
+    milestones = relationship('MilestoneModel', back_populates='project') #                     
 
     group_id = Column(ForeignKey('groups.id'), primary_key=True)
     group = relationship('groupModel')
 
 class ProjectTypeModel(BaseModel):
-    __tablename__ = 'projectTypes'
+    __tablename__ = 'projectProjectTypes'
     
-    id = Column(String)
-    type = Column(String)
+    id = UUIDColumn()
+    name = Column(String)
                             
     projects = relationship('ProjectModel', back_populates='projectType')                     
     
 class FinanceModel(BaseModel):
     __tablename__ = 'projectFinances'
     
-    id = Column(String)
+    id = UUIDColumn()
     name = Column(String)
     amount = Column(Float)
-    lastChange = Column(DateTime)
+    lastchange = Column(DateTime, default=datetime.datetime.now)
         
-    project_id = Column(ForeignKey('projects.id'), primary_key=True)              
+    project_id = Column(ForeignKey('projects.id'), primary_key=True)
+    project = relationship('ProjectModel')              
                             
-    financeType_id = Column(ForeignKey('financeTypes.id'), primary_key=True)
+    financeType_id = Column(ForeignKey('projectFinanceTypes.id'), primary_key=True)
     financeType = relationship('FinanceTypeModel', back_populates='finances')
                                
 class FinanceTypeModel(BaseModel):
     __tablename__ = 'projectFinanceTypes'
     
-    id = Column(String)
-    type = Column(String)
+    id = UUIDColumn()
+    name = Column(String)
    
     finances = relationship('FinanceModel', back_populates='financeType')
       
 class MilestoneModel(BaseModel):
     __tablename__ = 'projectMilestones'
     
-    id = Column(String)
+    id = UUIDColumn()
     name = Column(String)                          
     date = Column(DateTime)
-    lastChange = Column(DateTime)
+    lastchange = Column(DateTime, default=datetime.datetime.now)
     
     project_id = Column(ForeignKey('projects.id'), primary_key=True)
+    project = relationship('ProjectModel')
 
 class GroupModel(BaseModel):
     """Spravuje data spojena se skupinou
     """
     __tablename__ = 'groups'
     
-    id = Column(String)
+    id = UUIDColumn()
     
 ###########################################################################################################################
 

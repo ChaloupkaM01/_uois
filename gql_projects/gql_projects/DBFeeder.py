@@ -47,47 +47,46 @@ financeTypesIDs = randomUUID(3)
 projectIDs = randomUUID(2)
 financeIDs = randomUUID(10)
 milestoneIDs = randomUUID(10)
+groupIDs = randomUUID(1)
 
-def determineProjectTypes(ids):
+def determineProjectTypes():
     """Definuje zakladni typy roli"""  
     projectTypes = [ 
-        {'id': projectTypesIDs[0], 'type':'shortTerm'},
-        {'id': projectTypesIDs[1], 'type':'mediumTerm'},
-        {'id': projectTypesIDs[2], 'type':'longTerm'},
+        {'id': projectTypesIDs[0], 'name':'shortTerm'},
+        {'id': projectTypesIDs[1], 'name':'mediumTerm'},
+        {'id': projectTypesIDs[2], 'name':'longTerm'},
     ]
     return projectTypes
 
-def determineFinanceTypes(ids):
+def determineFinanceTypes():
     """Definuje zakladni typy financi"""
     financeTypes = [ 
-        {'id': financeTypesIDs[0], 'type':'travelExpenses'},
-        {'id': financeTypesIDs[1], 'type':'accomodationExpenses'},
-        {'id': financeTypesIDs[2], 'type':'otherExpenses'},
+        {'id': financeTypesIDs[0], 'name':'travelExpenses'},
+        {'id': financeTypesIDs[1], 'name':'accomodationExpenses'},
+        {'id': financeTypesIDs[2], 'name':'otherExpenses'},
     ]
     return financeTypes
 
 def randomProject(id):
-    """Náhodný projekt"""
+    """Nahodny projekt"""
     startDate = randomStartDate()
     return {
         'id': id,
         'name': randomProjectName(),
         'startDate': startDate,
         'endDate': randomEndDate(startDate),
-        'lastChange': date.today(),
 
         'projectType_id': random.choice(projectTypesIDs),
 
-        'group_id': '' #externalID
+        'group_id': random.choice(groupIDs)
     }
 
 def randomFinance(id, index):
-    """Náhodné finance"""
+    """Nahodne finance"""
     return {
         'id': id,
         'name': f'Finance {index}',
         'amount': random.randint(100, 20000),
-        'lastChange': date.today(),
 
         'project_id': random.choice(projectIDs),
 
@@ -95,15 +94,20 @@ def randomFinance(id, index):
     }
 
 def randomMilestone(id, index):
-    """Náhodný milestone"""
+    """Nahodny milestone"""
     return {
         'id': id,
         'name': f'Milestone {index}',
         'date': randomStartDate(),
-        'lastChange': date.today(),
 
         'project_id': random.choice(projectIDs)
     }
+
+def randomGroup(id):
+    """Nahodna group"""
+    return {
+        'id': id
+    }   
 
 def createDataStructureProjectTypes():
     projectTypes = determineProjectTypes()
@@ -135,6 +139,11 @@ def createDataStructureMilestones():
 
     return milestones
 
+def createDataStructureGroups():
+    groups = [randomGroup(id) for id in groupIDs]
+    return groups
+
+
 async def randomDataStructure(session):
 
     projectTypes = createDataStructureProjectTypes()
@@ -149,20 +158,26 @@ async def randomDataStructure(session):
         session.add_all(financeTypesToAdd)
     await session.commit()
     
-    projects =  createDataStructureProjects()
+    projects = createDataStructureProjects()
     projectsToAdd = [ProjectModel(**record) for record in projects]
     async with session.begin():
         session.add_all(projectsToAdd)
     await session.commit()
 
-    finances =  createDataStructureFinances()
+    finances = createDataStructureFinances()
     financesToAdd = [FinanceModel(**record) for record in finances]
     async with session.begin():
         session.add_all(financesToAdd)
     await session.commit()
 
-    milestones =  createDataStructureMilestones()
+    milestones = createDataStructureMilestones()
     milestonesToAdd = [MilestoneModel(**record) for record in milestones]
     async with session.begin():
         session.add_all(milestonesToAdd)
+    await session.commit()
+
+    groups = createDataStructureGroups()
+    groupsToAdd = [GroupModel(**record) for record in groups]
+    async with session.begin():
+        session.add_all(groupsToAdd)
     await session.commit()
