@@ -242,7 +242,7 @@ class Query:
         result = await resolveProjectsForGroup(AsyncSessionFromInfo(info), id)
         return result
 
-    @strawberryA.field(description="""Random publications""")
+    @strawberryA.field(description="""Random projects""")
     async def randomProject(self, info: strawberryA.types.Info) -> Union[ProjectGQLModel, None]:
         result = await randomDataStructure(AsyncSessionFromInfo(info))
         return result
