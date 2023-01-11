@@ -44,7 +44,7 @@ def randomProjectName():
 
 projectTypesIDs = randomUUID(3)
 financeTypesIDs = randomUUID(3)
-projectIDs = randomUUID(2)
+projectIDs = randomUUID(10)
 financeIDs = randomUUID(10)
 milestoneIDs = randomUUID(10)
 groupIDs = randomUUID(1)
@@ -78,7 +78,8 @@ def randomProject(id):
 
         'projectType_id': random.choice(projectTypesIDs),
 
-        'group_id': random.choice(groupIDs)
+        #'group_id': random.choice(groupIDs)
+        'group_id': "be81f14c-a322-452a-bd4b-cdfcda863510"
     }
 
 def randomFinance(id, index):
@@ -106,7 +107,8 @@ def randomMilestone(id, index):
 def randomGroup(id):
     """Nahodna group"""
     return {
-        'id': id
+        #'id': id
+        'id': "be81f14c-a322-452a-bd4b-cdfcda863510"
     }   
 
 def createDataStructureProjectTypes():
@@ -176,8 +178,10 @@ async def randomDataStructure(session):
         session.add_all(milestonesToAdd)
     await session.commit()
 
-    groups = createDataStructureGroups()
+    """groups = createDataStructureGroups()
     groupsToAdd = [GroupModel(**record) for record in groups]
     async with session.begin():
         session.add_all(groupsToAdd)
-    await session.commit()
+    await session.commit()"""
+
+    return projects[0]['id']

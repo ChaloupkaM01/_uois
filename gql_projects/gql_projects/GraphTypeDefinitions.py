@@ -241,8 +241,9 @@ class Query:
     async def project_by_group(self, info: strawberryA.types.Info, id: strawberryA.ID) -> List[ProjectGQLModel]:
         result = await resolveProjectsForGroup(AsyncSessionFromInfo(info), id)
         return result
-
-    @strawberryA.field(description="""Random projects""")
-    async def randomProject(self, info: strawberryA.types.Info) -> Union[ProjectGQLModel, None]:
-        result = await randomDataStructure(AsyncSessionFromInfo(info))
+    
+    @strawberryA.field(description="""Random project""")
+    async def randomProject(self, info: strawberryA.types.Info) -> ProjectGQLModel:
+        firstNewID = await randomDataStructure(AsyncSessionFromInfo(info))
+        result = await resolveProjectById(AsyncSessionFromInfo(info), firstNewID)
         return result

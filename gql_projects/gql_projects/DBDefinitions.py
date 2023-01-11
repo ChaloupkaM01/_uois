@@ -39,7 +39,7 @@ class ProjectModel(BaseModel):
     milestones = relationship('MilestoneModel', back_populates='project') #                     
 
     group_id = Column(ForeignKey('groups.id'), primary_key=True)
-    group = relationship('groupModel')
+    group = relationship('GroupModel')
 
 class ProjectTypeModel(BaseModel):
     __tablename__ = 'projectProjectTypes'
