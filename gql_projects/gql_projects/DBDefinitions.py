@@ -30,7 +30,7 @@ class ProjectModel(BaseModel):
     name = Column(String)
     startDate = Column(DateTime)
     endDate = Column(DateTime)
-    lastchange = Column(DateTime, default=datetime.datetime.now)
+    lastchange = Column(DateTime, server_default=sqlalchemy.sql.func.now())
 
     projectType_id = Column(ForeignKey('projectProjectTypes.id'), primary_key=True)                      
     projectType = relationship('ProjectTypeModel', back_populates='projects') 
@@ -55,7 +55,7 @@ class FinanceModel(BaseModel):
     id = UUIDColumn()
     name = Column(String)
     amount = Column(Float)
-    lastchange = Column(DateTime, default=datetime.datetime.now)
+    lastchange = Column(DateTime, server_default=sqlalchemy.sql.func.now())
         
     project_id = Column(ForeignKey('projects.id'), primary_key=True)
     project = relationship('ProjectModel')              
@@ -77,7 +77,7 @@ class MilestoneModel(BaseModel):
     id = UUIDColumn()
     name = Column(String)                          
     date = Column(DateTime)
-    lastchange = Column(DateTime, default=datetime.datetime.now)
+    lastchange = Column(DateTime, server_default=sqlalchemy.sql.func.now())
     
     project_id = Column(ForeignKey('projects.id'), primary_key=True)
     project = relationship('ProjectModel')

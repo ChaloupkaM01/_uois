@@ -44,7 +44,7 @@ def randomProjectName():
 
 projectTypesIDs = randomUUID(3)
 financeTypesIDs = randomUUID(3)
-projectIDs = randomUUID(10)
+projectIDs = randomUUID(2)
 financeIDs = randomUUID(10)
 milestoneIDs = randomUUID(10)
 groupIDs = randomUUID(1)
