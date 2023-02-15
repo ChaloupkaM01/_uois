@@ -1,7 +1,7 @@
 import sqlalchemy
 import datetime
 
-from sqlalchemy import Column, String, BigInteger, Integer, DateTime, ForeignKey, Sequence, Table, Boolean, Float
+from sqlalchemy import Column, String, BigInteger, Integer, DateTime, ForeignKey, Sequence, Table, Boolean, Float, Date
 from sqlalchemy.dialects.postgresql import UUID
 
 from sqlalchemy.orm import relationship
@@ -24,12 +24,14 @@ def UUIDColumn(name=None):
 #
     
 class ProjectModel(BaseModel):
+    """Spravuje data spojena s projekty"""
     __tablename__ = 'projects'
     
     id = UUIDColumn()
+    valid = Column(Boolean)
     name = Column(String)
-    startDate = Column(DateTime)
-    endDate = Column(DateTime)
+    startDate = Column(Date)
+    endDate = Column(Date)
     lastchange = Column(DateTime, server_default=sqlalchemy.sql.func.now())
 
     projectType_id = Column(ForeignKey('projectProjectTypes.id'), primary_key=True)                      
@@ -42,6 +44,7 @@ class ProjectModel(BaseModel):
     group = relationship('GroupModel')
 
 class ProjectTypeModel(BaseModel):
+    """Spravuje data spojena s typy projektu"""
     __tablename__ = 'projectProjectTypes'
     
     id = UUIDColumn()
@@ -50,6 +53,7 @@ class ProjectTypeModel(BaseModel):
     projects = relationship('ProjectModel', back_populates='projectType')                     
     
 class FinanceModel(BaseModel):
+    """Spravuje data spojena s financemi projektu"""
     __tablename__ = 'projectFinances'
     
     id = UUIDColumn()
@@ -64,6 +68,7 @@ class FinanceModel(BaseModel):
     financeType = relationship('FinanceTypeModel', back_populates='finances')
                                
 class FinanceTypeModel(BaseModel):
+    """Spravuje data spojena s typy financi projektu"""
     __tablename__ = 'projectFinanceTypes'
     
     id = UUIDColumn()
@@ -72,19 +77,19 @@ class FinanceTypeModel(BaseModel):
     finances = relationship('FinanceModel', back_populates='financeType')
       
 class MilestoneModel(BaseModel):
+    """Spravuje data spojena s milniky projektu"""
     __tablename__ = 'projectMilestones'
     
     id = UUIDColumn()
     name = Column(String)                          
-    date = Column(DateTime)
+    date = Column(Date)
     lastchange = Column(DateTime, server_default=sqlalchemy.sql.func.now())
     
     project_id = Column(ForeignKey('projects.id'), primary_key=True)
     project = relationship('ProjectModel')
 
 class GroupModel(BaseModel):
-    """Spravuje data spojena se skupinou
-    """
+    """Spravuje data spojena se skupinou zpracovavajici projekt"""
     __tablename__ = 'groups'
     
     id = UUIDColumn()

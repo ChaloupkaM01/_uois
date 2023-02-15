@@ -2,6 +2,7 @@
 from ast import Call
 from typing import Coroutine, Callable, Awaitable, Union, List
 import uuid
+from sqlalchemy import delete
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload, joinedload
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -10,8 +11,6 @@ from uoishelpers.resolvers import create1NGetter, createEntityByIdGetter, create
 from uoishelpers.resolvers import putSingleEntityToDb
 
 ## Nasleduji funkce, ktere lze pouzit jako asynchronni resolvery
-
-
 
 ###########################################################################################################################
 #
@@ -36,7 +35,7 @@ resolveUpdateProject = createUpdateResolver(ProjectModel)
 resolveInsertProject = createInsertResolver(ProjectModel)
 
 resolveMilestonesForProject = create1NGetter(MilestoneModel, foreignKeyName='project_id')
-resolveFinancesForProject = create1NGetter(FinanceModel, foreignKeyName='project_id', options=joinedload(FinanceModel.financeType))
+resolveFinancesForProject = create1NGetter(FinanceModel, foreignKeyName='project_id')
 
 #ProjectType resolvers
 resolveProjectTypeById = createEntityByIdGetter(ProjectTypeModel)

@@ -1,12 +1,27 @@
-from typing import List, Union
+from typing import List, Union, Optional
 import typing
 from unittest import result
 import strawberry as strawberryA
 import datetime
 import uuid
 
+from contextlib import asynccontextmanager
+
+@asynccontextmanager
+async def withInfo(info):
+    asyncSessionMaker = info.context['asyncSessionMaker']
+    async with asyncSessionMaker() as session:
+        try:
+            yield session
+        finally:
+            pass
+
 def AsyncSessionFromInfo(info):
+    print('obsolete function used AsyncSessionFromInfo, use withInfo context manager instead')
     return info.context['session']
+
+def AsyncSessionMakerFromInfo(info):
+    return info.context['asyncSessionMaker']
 
 ###########################################################################################################################
 #
@@ -22,9 +37,10 @@ from gql_projects.GraphResolvers import resolveProjectById, resolveProjectAll, r
 class ProjectGQLModel:
     @classmethod
     async def resolve_reference(cls, info: strawberryA.types.Info, id: strawberryA.ID):
-        result = await resolveProjectById(AsyncSessionFromInfo(info), id)
-        result._type_definition = cls._type_definition # little hack :)
-        return result
+        async with withInfo(info) as session:
+            result = await resolveProjectById(session, id)
+            result._type_definition = cls._type_definition # little hack :)
+            return result
     
     @strawberryA.field(description="""Primary key""")
     def id(self) -> strawberryA.ID:
@@ -33,6 +49,10 @@ class ProjectGQLModel:
     @strawberryA.field(description="""Name""")
     def name(self) -> str:
         return self.name
+
+    @strawberryA.field(description="""Valid""")
+    def valid(self) -> bool:
+        return self.valid
 
     @strawberryA.field(description="""Start date""")
     def startDate(self) -> datetime.date:
@@ -48,23 +68,105 @@ class ProjectGQLModel:
 
     @strawberryA.field(description="""Project type of project""")
     async def projectType(self, info: strawberryA.types.Info) -> 'ProjectTypeGQLModel':
-        result = await resolveProjectTypeById(AsyncSessionFromInfo(info), self.projectType_id)
-        return result
+        async with withInfo(info) as session:
+            result = await resolveProjectTypeById(session, self.projectType_id)
+            return result
 
     @strawberryA.field(description="""List of finances, related to a project""")
     async def finances(self, info: strawberryA.types.Info) -> typing.List['FinanceGQLModel']:
-        result = await resolveFinancesForProject(AsyncSessionFromInfo(info), self.id)
-        return result
+        async with withInfo(info) as session:
+            result = await resolveFinancesForProject(session, self.id)
+            return result
 
     @strawberryA.field(description="""List of milestones, related to a project""")
     async def milestones(self, info: strawberryA.types.Info) -> typing.List['MilestoneGQLModel']:
-        result = await resolveMilestonesForProject(AsyncSessionFromInfo(info), self.id)
-        return result
+        async with withInfo(info) as session:
+            result = await resolveMilestonesForProject(session, self.id)
+            return result
 
     @strawberryA.field(description="""Group, related to a project""")
-    async def group(self, info: strawberryA.types.Info) -> 'GroupGQLModel':
+    async def group(self) -> 'GroupGQLModel':
         return GroupGQLModel(id=self.group_id)
 
+    @strawberryA.field(description="""Returns the project editor""")
+    async def editor(self, info: strawberryA.types.Info) -> Union['ProjectEditorGQLModel', None]:
+        return self
+
+
+#GQL PROJECT INSERT
+@strawberryA.input(description="""Entity representing a project insert""")
+class ProjectInsertGQLModel:
+    id: Optional[uuid.UUID] = None
+    name:  Optional[str] = None
+    valid: Optional[bool] = None
+    start_date: Optional[datetime.date] = None 
+    end_date: Optional[datetime.date] = None 
+    project_type_id: Optional[uuid.UUID] = None
+    group_id: Optional[uuid.UUID] = None
+
+
+ #GQL PROJECT UPDATE
+@strawberryA.input(description="""Entity representing a project update""")
+class ProjectUpdateGQLModel:
+    name:  Optional[str] = None
+    valid: Optional[bool] = None
+    start_date: Optional[datetime.date] = None 
+    end_date: Optional[datetime.date] = None 
+    project_type_id: Optional[uuid.UUID] = None
+    group_id: Optional[uuid.UUID] = None
+    lastchange: Optional[datetime.datetime] = None
+
+
+#GQL PROJECT EDITOR
+@strawberryA.federation.type(keys=["id"], description="""Entity representing an editable project""")
+class ProjectEditorGQLModel:
+    id: strawberryA.ID = None
+    result: str = None
+
+    @classmethod
+    async def resolve_reference(cls, info: strawberryA.types.Info, id: strawberryA.ID):
+        async with withInfo(info) as session:
+            result = await resolveProjectById(session, id)
+            result._type_definition = cls._type_definition # little hack :)
+            return result
+
+    @strawberryA.field(description="""Entity primary key""")
+    def id(self) -> strawberryA.ID:
+        return self.id
+
+    @strawberryA.field(description="""Result status of update operation""")
+    def result(self) -> str:
+        return self.result 
+
+    @strawberryA.field(description="""Result of update operation""")
+    async def project(self, info: strawberryA.types.Info) -> ProjectGQLModel:
+        async with withInfo(info) as session:
+            result = await resolveProjectById(session, id)
+            return result
+
+    @strawberryA.field(description="""Updates the project data""")
+    async def update(self, info: strawberryA.types.Info, data: ProjectUpdateGQLModel) -> 'ProjectEditorGQLModel':
+        lastchange = data.lastchange
+        async with withInfo(info) as session:
+            await resolveUpdateProject(session, id=self.id, data=data)
+            if lastchange == data.lastchange:
+                # no change
+                resultMsg = "fail"
+            else:
+                resultMsg = "ok"
+            result = ProjectEditorGQLModel()
+            result.id = self.id
+            result.result = resultMsg
+            return result    
+
+    @strawberryA.field(description="""Invalidate project""")
+    async def invalidate_project(self, info: strawberryA.types.Info) -> 'ProjectGQLModel':
+        async with withInfo(info) as session:
+            project = await resolveProjectById(session, self.id)
+            project.valid = False
+            await session.commit()
+            return project
+    
 
 #GQL PROJECT TYPE
 from gql_projects.GraphResolvers import resolveProjectTypeById, resolveProjectTypeAll, resolveUpdateProjectType, resolveInsertProjectType, resolveProjectsForProjectType, resolveFinancesForProject, resolveMilestonesForProject
@@ -72,9 +174,10 @@ from gql_projects.GraphResolvers import resolveProjectTypeById, resolveProjectTy
 class ProjectTypeGQLModel:
     @classmethod
     async def resolve_reference(cls, info: strawberryA.types.Info, id: strawberryA.ID):
-        result = await resolveProjectTypeById(AsyncSessionFromInfo(info), id)
-        result._type_definition = cls._type_definition # little hack :)
-        return result
+        async with withInfo(info) as session:
+            result = await resolveProjectTypeById(session, id)
+            result._type_definition = cls._type_definition # little hack :)
+            return result
 
     @strawberryA.field(description="""Primary key""")
     def id(self) -> strawberryA.ID:
@@ -86,8 +189,9 @@ class ProjectTypeGQLModel:
     
     @strawberryA.field(description="""List of projects, related to project type""")
     async def projects(self, info: strawberryA.types.Info) -> typing.List['ProjectGQLModel']:
-        result = await resolveProjectsForProjectType(AsyncSessionFromInfo(info), self.id)
-        return result
+        async with withInfo(info) as session:
+            result = await resolveProjectsForProjectType(session, self.id)
+            return result
 
 
 #GQL FINANCE
@@ -96,9 +200,10 @@ from gql_projects.GraphResolvers import resolveFinanceById, resolveFinanceAll, r
 class FinanceGQLModel:
     @classmethod
     async def resolve_reference(cls, info: strawberryA.types.Info, id: strawberryA.ID):
-        result = await resolveFinanceById(AsyncSessionFromInfo(info), id)
-        result._type_definition = cls._type_definition # little hack :)
-        return result
+        async with withInfo(info) as session:
+            result = await resolveFinanceById(session, id)
+            result._type_definition = cls._type_definition # little hack :)
+            return result
 
     @strawberryA.field(description="""Primary key""")
     def id(self) -> strawberryA.ID:
@@ -118,13 +223,15 @@ class FinanceGQLModel:
 
     @strawberryA.field(description="""Project of finance""")
     async def project(self, info: strawberryA.types.Info) -> 'ProjectGQLModel':
-        result = await resolveProjectById(AsyncSessionFromInfo(info), self.project_id)
-        return result
+        async with withInfo(info) as session:
+            result = await resolveProjectById(session, self.project_id)
+            return result
 
     @strawberryA.field(description="""Finance type of finance""")
     async def financeType(self, info: strawberryA.types.Info) -> 'FinanceTypeGQLModel':
-        result = await resolveFinanceTypeById(AsyncSessionFromInfo(info), self.financeType_id)
-        return result
+        async with withInfo(info) as session:
+            result = await resolveFinanceTypeById(session, self.financeType_id)
+            return result
 
 
 #GQL FINANCE TYPE
@@ -133,9 +240,10 @@ from gql_projects.GraphResolvers import resolveFinanceTypeById, resolveFinanceTy
 class FinanceTypeGQLModel:
     @classmethod
     async def resolve_reference(cls, info: strawberryA.types.Info, id: strawberryA.ID):
-        result = await resolveFinanceTypeById(AsyncSessionFromInfo(info), id)
-        result._type_definition = cls._type_definition # little hack :)
-        return result
+        async with withInfo(info) as session:
+            result = await resolveFinanceTypeById(session, id)
+            result._type_definition = cls._type_definition # little hack :)
+            return result
 
     @strawberryA.field(description="""Primary key""")
     def id(self) -> strawberryA.ID:
@@ -147,8 +255,9 @@ class FinanceTypeGQLModel:
     
     @strawberryA.field(description="""List of finances, related to finance type""")
     async def finances(self, info: strawberryA.types.Info) -> typing.List['FinanceGQLModel']:
-        result = await resolveFinancesForFinanceType(AsyncSessionFromInfo(info), self.id)
-        return result
+        async with withInfo(info) as session:
+            result = await resolveFinancesForFinanceType(session, self.id)
+            return result
 
 
 #GQL MILESTONE
@@ -157,9 +266,10 @@ from gql_projects.GraphResolvers import resolveMilestoneById, resolveMilestoneAl
 class MilestoneGQLModel:
     @classmethod
     async def resolve_reference(cls, info: strawberryA.types.Info, id: strawberryA.ID):
-        result = await resolveMilestoneById(AsyncSessionFromInfo(info), id)
-        result._type_definition = cls._type_definition # little hack :)
-        return result
+        async with withInfo(info) as session:
+            result = await resolveMilestoneById(session, id)
+            result._type_definition = cls._type_definition # little hack :)
+            return result
 
     @strawberryA.field(description="""Primary key""")
     def id(self) -> strawberryA.ID:
@@ -179,8 +289,9 @@ class MilestoneGQLModel:
 
     @strawberryA.field(description="""Project of milestone""")
     async def project(self, info: strawberryA.types.Info) -> 'ProjectGQLModel':
-        result = await resolveProjectById(AsyncSessionFromInfo(info), self.project_id)
-        return result
+        async with withInfo(info) as session:
+            result = await resolveProjectById(session, self.project_id)
+            return result
 
 
 #GQL GROUP
@@ -194,8 +305,9 @@ class GroupGQLModel:
 
     @strawberryA.field(description="""List of projects, related to group""")
     async def projects(self, info: strawberryA.types.Info) -> typing.List['ProjectGQLModel']:
-        result = await resolveProjectsForGroup(AsyncSessionFromInfo(info), self.id)
-        return result
+        async with withInfo(info) as session:
+            result = await resolveProjectsForGroup(session, self.id)
+            return result
 
 ###########################################################################################################################
 #

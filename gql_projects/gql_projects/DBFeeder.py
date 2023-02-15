@@ -72,6 +72,7 @@ def randomProject(id):
     startDate = randomStartDate()
     return {
         'id': id,
+        'valid': True,
         'name': randomProjectName(),
         'startDate': startDate,
         'endDate': randomEndDate(startDate),
@@ -147,7 +148,7 @@ def createDataStructureGroups():
 
 
 async def randomDataStructure(session):
-
+    """Zpracovani nahodne vytvorenych dat pro vklad do databaze"""
     projectTypes = createDataStructureProjectTypes()
     projectTypesToAdd = [ProjectTypeModel(**record) for record in projectTypes]
     async with session.begin():
