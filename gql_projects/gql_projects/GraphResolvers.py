@@ -51,6 +51,23 @@ resolveFinanceAll = createEntityGetter(FinanceModel)
 resolveUpdateFinance = createUpdateResolver(FinanceModel)
 resolveInsertFinance = createInsertResolver(FinanceModel)
 
+async def resolveRemoveFinance(session, project_id, finance_id):
+    stmt = delete(FinanceModel).where((FinanceModel.project_id==project_id) & (FinanceModel.id==finance_id))
+    resultMsg= ""
+    try:
+        response = await session.execute(stmt)
+        await session.commit()
+        if(response.rowcount == 1):
+            resultMsg = "ok"
+        else:
+            resultMsg = "fail"
+        
+    except:
+        resultMsg="error"
+  
+    return resultMsg
+
+
 #FinanceType resolvers
 resolveFinanceTypeById = createEntityByIdGetter(FinanceTypeModel)
 resolveFinanceTypeAll = createEntityGetter(FinanceTypeModel)
@@ -64,6 +81,23 @@ resolveMilestoneById = createEntityByIdGetter(MilestoneModel)
 resolveMilestoneAll = createEntityGetter(MilestoneModel)
 resolveUpdateMilestone = createUpdateResolver(MilestoneModel)
 resolveInsertMilestone = createInsertResolver(MilestoneModel)
+
+async def resolveRemoveMilestone(session, project_id, milestone_id):
+    stmt = delete(MilestoneModel).where((MilestoneModel.project_id==project_id) & (MilestoneModel.id==milestone_id))
+    resultMsg= ""
+    try:
+        response = await session.execute(stmt)
+        await session.commit()
+        if(response.rowcount == 1):
+            resultMsg = "ok"
+        else:
+            resultMsg = "fail"
+        
+    except:
+        resultMsg="error"
+  
+    return resultMsg
+
 
 #Group resolvers
 resolveProjectsForGroup = create1NGetter(ProjectModel, foreignKeyName='group_id')

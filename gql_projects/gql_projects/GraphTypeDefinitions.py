@@ -91,33 +91,22 @@ class ProjectGQLModel:
     @strawberryA.field(description="""Returns the project editor""")
     async def editor(self, info: strawberryA.types.Info) -> Union['ProjectEditorGQLModel', None]:
         return self
-
-
-#GQL PROJECT INSERT
-@strawberryA.input(description="""Entity representing a project insert""")
-class ProjectInsertGQLModel:
-    id: Optional[uuid.UUID] = None
-    name:  Optional[str] = None
-    valid: Optional[bool] = None
-    start_date: Optional[datetime.date] = None 
-    end_date: Optional[datetime.date] = None 
-    project_type_id: Optional[uuid.UUID] = None
-    group_id: Optional[uuid.UUID] = None
-
+    
 
  #GQL PROJECT UPDATE
 @strawberryA.input(description="""Entity representing a project update""")
 class ProjectUpdateGQLModel:
+    lastchange: datetime.datetime
     name:  Optional[str] = None
     valid: Optional[bool] = None
     start_date: Optional[datetime.date] = None 
     end_date: Optional[datetime.date] = None 
     project_type_id: Optional[uuid.UUID] = None
     group_id: Optional[uuid.UUID] = None
-    lastchange: Optional[datetime.datetime] = None
 
 
 #GQL PROJECT EDITOR
+from gql_projects.GraphResolvers import resolveRemoveFinance, resolveRemoveMilestone
 @strawberryA.federation.type(keys=["id"], description="""Entity representing an editable project""")
 class ProjectEditorGQLModel:
     id: strawberryA.ID = None
@@ -166,10 +155,34 @@ class ProjectEditorGQLModel:
             project.valid = False
             await session.commit()
             return project
+        
+    @strawberryA.field(description="""Create new finance""")
+    async def add_finance(self, info: strawberryA.types.Info, name: str, amount: int, financeType_id: uuid.UUID) -> 'FinanceGQLModel':
+        async with withInfo(info) as session:
+            result = await resolveInsertFinance(session, None, extraAttributes={'name': name, 'amount': amount, 'financeType_id': financeType_id, 'project_id': self.id})
+            return result    
+
+    @strawberryA.field(description="""Remove finance""")
+    async def remove_finance(self, info: strawberryA.types.Info, finance_id: uuid.UUID) -> str:
+        async with withInfo(info) as session:
+            result = await resolveRemoveFinance(session, self.id, finance_id)
+            return result
+        
+    @strawberryA.field(description="""Create new milestone""")
+    async def add_milestone(self, info: strawberryA.types.Info, name: str, date: datetime.date) -> 'MilestoneGQLModel':
+        async with withInfo(info) as session:
+            result = await resolveInsertMilestone(session, None, extraAttributes={'name': name, 'date': date, 'project_id': self.id})
+            return result  
+
+    @strawberryA.field(description="""Remove milestone""")
+    async def remove_milestone(self, info: strawberryA.types.Info, milestone_id: uuid.UUID) -> str:
+        async with withInfo(info) as session:
+            result = await resolveRemoveMilestone(session, self.id, milestone_id)
+            return result
     
 
 #GQL PROJECT TYPE
-from gql_projects.GraphResolvers import resolveProjectTypeById, resolveProjectTypeAll, resolveUpdateProjectType, resolveInsertProjectType, resolveProjectsForProjectType, resolveFinancesForProject, resolveMilestonesForProject
+from gql_projects.GraphResolvers import resolveProjectTypeById, resolveProjectTypeAll, resolveProjectsForProjectType, resolveFinancesForProject, resolveMilestonesForProject
 @strawberryA.federation.type(keys=["id"],description="""Entity representing a project types""")
 class ProjectTypeGQLModel:
     @classmethod
@@ -195,7 +208,7 @@ class ProjectTypeGQLModel:
 
 
 #GQL FINANCE
-from gql_projects.GraphResolvers import resolveFinanceById, resolveFinanceAll, resolveUpdateFinance, resolveInsertFinance
+from gql_projects.GraphResolvers import resolveFinanceById, resolveFinanceAll, resolveInsertFinance
 @strawberryA.federation.type(keys=["id"],description="""Entity representing a finance""")
 class FinanceGQLModel:
     @classmethod
@@ -232,10 +245,67 @@ class FinanceGQLModel:
         async with withInfo(info) as session:
             result = await resolveFinanceTypeById(session, self.financeType_id)
             return result
+        
+    @strawberryA.field(description="""Returns the finance editor""")
+    async def editor(self, info: strawberryA.types.Info) -> Union['FinanceEditorGQLModel', None]:
+        return self
+
+
+ #GQL FINANCE UPDATE
+@strawberryA.input(description="""Entity representing a finance update""")
+class FinanceUpdateGQLModel:
+    lastchange: datetime.datetime
+    name:  Optional[str] = None
+    amount: Optional[int] = None
+    finance_type_id: Optional[uuid.UUID] = None
+
+
+#GQL FINANCE EDITOR
+from gql_projects.GraphResolvers import resolveUpdateFinance
+@strawberryA.federation.type(keys=["id"], description="""Entity representing an editable finance""")
+class FinanceEditorGQLModel:
+    id: strawberryA.ID = None
+    result: str = None
+
+    @classmethod
+    async def resolve_reference(cls, info: strawberryA.types.Info, id: strawberryA.ID):
+        async with withInfo(info) as session:
+            result = await resolveFinanceById(session, id)
+            result._type_definition = cls._type_definition # little hack :)
+            return result
+
+    @strawberryA.field(description="""Entity primary key""")
+    def id(self) -> strawberryA.ID:
+        return self.id
+
+    @strawberryA.field(description="""Result status of update operation""")
+    def result(self) -> str:
+        return self.result 
+
+    @strawberryA.field(description="""Result of update operation""")
+    async def finance(self, info: strawberryA.types.Info) -> FinanceGQLModel:
+        async with withInfo(info) as session:
+            result = await resolveFinanceById(session, id)
+            return result
+
+    @strawberryA.field(description="""Updates the finance data""")
+    async def update(self, info: strawberryA.types.Info, data: FinanceUpdateGQLModel) -> 'FinanceEditorGQLModel':
+        lastchange = data.lastchange
+        async with withInfo(info) as session:
+            await resolveUpdateFinance(session, id=self.id, data=data)
+            if lastchange == data.lastchange:
+                # no change
+                resultMsg = "fail"
+            else:
+                resultMsg = "ok"
+            result = FinanceEditorGQLModel()
+            result.id = self.id
+            result.result = resultMsg
+            return result
 
 
 #GQL FINANCE TYPE
-from gql_projects.GraphResolvers import resolveFinanceTypeById, resolveFinanceTypeAll, resolveUpdateFinanceType, resolveInsertFinanceType, resolveFinancesForFinanceType
+from gql_projects.GraphResolvers import resolveFinanceTypeById, resolveFinanceTypeAll, resolveFinancesForFinanceType
 @strawberryA.federation.type(keys=["id"],description="""Entity representing a finance type""")
 class FinanceTypeGQLModel:
     @classmethod
@@ -261,7 +331,7 @@ class FinanceTypeGQLModel:
 
 
 #GQL MILESTONE
-from gql_projects.GraphResolvers import resolveMilestoneById, resolveMilestoneAll, resolveUpdateMilestone, resolveInsertMilestone
+from gql_projects.GraphResolvers import resolveMilestoneById, resolveMilestoneAll, resolveInsertMilestone
 @strawberryA.federation.type(keys=["id"],description="""Entity representing a milestone""")
 class MilestoneGQLModel:
     @classmethod
@@ -292,6 +362,62 @@ class MilestoneGQLModel:
         async with withInfo(info) as session:
             result = await resolveProjectById(session, self.project_id)
             return result
+    
+    @strawberryA.field(description="""Returns the milestone editor""")
+    async def editor(self, info: strawberryA.types.Info) -> Union['MilestoneEditorGQLModel', None]:
+        return self
+        
+
+ #GQL MILESTONE UPDATE
+@strawberryA.input(description="""Entity representing a milestone update""")
+class MilestoneUpdateGQLModel:
+    lastchange: datetime.datetime
+    name:  Optional[str] = None
+    date: Optional[datetime.date] = None
+
+
+#GQL MILESTONE EDITOR
+from gql_projects.GraphResolvers import resolveUpdateMilestone
+@strawberryA.federation.type(keys=["id"], description="""Entity representing an editable milestone""")
+class MilestoneEditorGQLModel:
+    id: strawberryA.ID = None
+    result: str = None
+
+    @classmethod
+    async def resolve_reference(cls, info: strawberryA.types.Info, id: strawberryA.ID):
+        async with withInfo(info) as session:
+            result = await resolveMilestoneById(session, id)
+            result._type_definition = cls._type_definition # little hack :)
+            return result
+
+    @strawberryA.field(description="""Entity primary key""")
+    def id(self) -> strawberryA.ID:
+        return self.id
+
+    @strawberryA.field(description="""Result status of update operation""")
+    def result(self) -> str:
+        return self.result 
+
+    @strawberryA.field(description="""Result of update operation""")
+    async def milestone(self, info: strawberryA.types.Info) -> MilestoneGQLModel:
+        async with withInfo(info) as session:
+            result = await resolveMilestoneById(session, id)
+            return result
+
+    @strawberryA.field(description="""Updates the milestone data""")
+    async def update(self, info: strawberryA.types.Info, data: MilestoneUpdateGQLModel) -> 'MilestoneEditorGQLModel':
+        lastchange = data.lastchange
+        async with withInfo(info) as session:
+            await resolveUpdateMilestone(session, id=self.id, data=data)
+            if lastchange == data.lastchange:
+                # no change
+                resultMsg = "fail"
+            else:
+                resultMsg = "ok"
+            result = MilestoneEditorGQLModel()
+            result.id = self.id
+            result.result = resultMsg
+            return result
 
 
 #GQL GROUP
@@ -321,41 +447,61 @@ from gql_projects.DBFeeder import randomDataStructure
 class Query:  
     @strawberryA.field(description="""Returns a list of projects""")
     async def project_page(self, info: strawberryA.types.Info, skip: int = 0, limit: int = 10) -> List[ProjectGQLModel]:
-        result = await resolveProjectAll(AsyncSessionFromInfo(info), skip, limit)
-        return result
+        async with withInfo(info) as session:
+            result = await resolveProjectAll(session, skip, limit)
+            return result
 
     @strawberryA.field(description="""Returns project by its id""")
     async def project_by_id(self, info: strawberryA.types.Info, id: uuid.UUID) -> Union[ProjectGQLModel, None]:
-        result = await resolveProjectById(AsyncSessionFromInfo(info), id)
-        return result
+        async with withInfo(info) as session:
+            result = await resolveProjectById(session, id)
+            return result
 
     @strawberryA.field(description="""Returns a list of project types""")
     async def project_type_page(self, info: strawberryA.types.Info, skip: int = 0, limit: int = 10) -> List[ProjectTypeGQLModel]:
-        result = await resolveProjectTypeAll(AsyncSessionFromInfo(info), skip, limit)
-        return result
+        async with withInfo(info) as session:
+            result = await resolveProjectTypeAll(session, skip, limit)
+            return result
 
     @strawberryA.field(description="""Returns a list of finances""")
     async def finance_page(self, info: strawberryA.types.Info, skip: int = 0, limit: int = 10) -> List[FinanceGQLModel]:
-        result = await resolveFinanceAll(AsyncSessionFromInfo(info), skip, limit)
-        return result
+        async with withInfo(info) as session:
+            result = await resolveFinanceAll(session, skip, limit)
+            return result
+    
+    @strawberryA.field(description="""Returns finance by its id""")
+    async def finance_by_id(self, info: strawberryA.types.Info, id: uuid.UUID) -> Union[FinanceGQLModel, None]:
+        async with withInfo(info) as session:
+            result = await resolveFinanceById(session, id)
+            return result
 
     @strawberryA.field(description="""Returns a list of finance types""")
     async def finance_type_page(self, info: strawberryA.types.Info, skip: int = 0, limit: int = 10) -> List[FinanceTypeGQLModel]:
-        result = await resolveFinanceTypeAll(AsyncSessionFromInfo(info), skip, limit)
-        return result
+        async with withInfo(info) as session:
+            result = await resolveFinanceTypeAll(session, skip, limit)
+            return result
 
     @strawberryA.field(description="""Returns a list of milestones""")
     async def milestone_page(self, info: strawberryA.types.Info, skip: int = 0, limit: int = 10) -> List[MilestoneGQLModel]:
-        result = await resolveMilestoneAll(AsyncSessionFromInfo(info), skip, limit)
-        return result
+        async with withInfo(info) as session:
+            result = await resolveMilestoneAll(session, skip, limit)
+            return result
+    
+    @strawberryA.field(description="""Returns milestone by its id""")
+    async def milestone_by_id(self, info: strawberryA.types.Info, id: uuid.UUID) -> Union[MilestoneGQLModel, None]:
+        async with withInfo(info) as session:
+            result = await resolveMilestoneById(session, id)
+            return result
 
     @strawberryA.field(description="""Returns a list of projects for group""")
     async def project_by_group(self, info: strawberryA.types.Info, id: strawberryA.ID) -> List[ProjectGQLModel]:
-        result = await resolveProjectsForGroup(AsyncSessionFromInfo(info), id)
-        return result
+        async with withInfo(info) as session:
+            result = await resolveProjectsForGroup(session, id)
+            return result
     
     @strawberryA.field(description="""Random project""")
     async def randomProject(self, info: strawberryA.types.Info) -> ProjectGQLModel:
-        firstNewID = await randomDataStructure(AsyncSessionFromInfo(info))
-        result = await resolveProjectById(AsyncSessionFromInfo(info), firstNewID)
-        return result
+        async with withInfo(info) as session:
+            firstNewID = await randomDataStructure(session)
+            result = await resolveProjectById(session, firstNewID)
+            return result
