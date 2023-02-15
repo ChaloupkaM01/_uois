@@ -96,7 +96,7 @@ def randomFinance(id, index):
     }
 
 def randomMilestone(id, index):
-    """Nahodny milestone"""
+    """Nahodny milnik"""
     return {
         'id': id,
         'name': f'Milestone {index}',
@@ -106,25 +106,29 @@ def randomMilestone(id, index):
     }
 
 def randomGroup(id):
-    """Nahodna group"""
+    """Nahodna skupina"""
     return {
         #'id': id
         'id': "be81f14c-a322-452a-bd4b-cdfcda863510"
     }   
 
 def createDataStructureProjectTypes():
+    """Vytvoreni struktur pro typy projektu"""
     projectTypes = determineProjectTypes()
     return projectTypes
 
 def createDataStructureFinanceTypes():
+    """Vytvoreni struktur pro typy financi"""
     financeTypes = determineFinanceTypes()
     return financeTypes
 
 def createDataStructureProjects():
+    """Vytvoreni struktur pro projekty"""
     projects = [randomProject(id) for id in projectIDs]
     return projects
 
 def createDataStructureFinances():
+    """Vytvoreni struktur pro finance projektu"""
     index = 1
     finances = []
     for id in financeIDs:
@@ -134,6 +138,7 @@ def createDataStructureFinances():
     return finances  
 
 def createDataStructureMilestones():
+    """Vytvoreni struktur pro milniky projektu"""
     index = 1
     milestones = []
     for id in milestoneIDs:
@@ -143,12 +148,13 @@ def createDataStructureMilestones():
     return milestones
 
 def createDataStructureGroups():
+    """Vytvoreni struktur pro skupiny resici projekt"""
     groups = [randomGroup(id) for id in groupIDs]
     return groups
 
 
 async def randomDataStructure(session):
-    """Zpracovani nahodne vytvorenych dat pro vklad do databaze"""
+    """Zpracovani vytvorenych struktur pro vklad do databaze"""
     projectTypes = createDataStructureProjectTypes()
     projectTypesToAdd = [ProjectTypeModel(**record) for record in projectTypes]
     async with session.begin():

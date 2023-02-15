@@ -50,7 +50,7 @@ class ProjectGQLModel:
     def name(self) -> str:
         return self.name
 
-    @strawberryA.field(description="""Valid""")
+    @strawberryA.field(description="""If project is valid or not""")
     def valid(self) -> bool:
         return self.valid
 
