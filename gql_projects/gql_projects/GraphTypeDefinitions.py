@@ -422,7 +422,7 @@ class MilestoneEditorGQLModel:
 
 #GQL GROUP
 from gql_projects.GraphResolvers import resolveProjectsForGroup
-@strawberryA.federation.type(extend=True, keys=["id"],description="""Entity representing a group""")
+@strawberryA.federation.type(extend=True, keys=["id"])
 class GroupGQLModel:
     id: strawberryA.ID = strawberryA.federation.field(external=True)
     @classmethod
